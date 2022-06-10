@@ -1,0 +1,36 @@
+# Let's scrape Freiburgs Scooter!
+name: scooterscraping
+
+on:
+  schedule:
+    - cron:  '*/15 * * * *' # Every 15 min. Ref https://crontab.guru/examples.html
+
+jobs: 
+  autoscrape:
+    runs-on: macos-latest
+
+    # Load repo and install R
+    steps:
+    - uses: actions/checkout@master
+    - uses: r-lib/actions/setup-r@master
+
+    # Set-up R
+    - name: Install packages
+      run: |
+        R -e 'install.packages("tidyverse")'
+        R -e 'install.packages("jsonlite")'
+    # Run R script
+    - name: Scrape
+      run: Rscript scooter_scraping.R
+      
+ # Add new files in data folder, commit along with other modified files, push
+    - name: Commit files
+      run: |
+        git config --local user.name actions-user
+        git config --local user.email "actions@github.com"
+        git add data/*
+        git commit -am "GH ACTION Headlines $(date)"
+        git push origin main
+      env:
+        REPO_KEY: ${{secrets.GITHUB_TOKEN}}
+        username: github-actions
